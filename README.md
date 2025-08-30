@@ -131,11 +131,32 @@ This project is configured for one-click deployment on Railway:
 
 The app will be live at your Railway-provided URL (e.g., `https://your-app.up.railway.app`)
 
+### Hugging Face Spaces Deployment
+
+Deploy on Hugging Face Spaces for free ML model hosting:
+
+1. **Create a new Space** on [Hugging Face](https://huggingface.co/spaces)
+2. **Select Docker** as the Space SDK
+3. **Upload your repository** files including the `Dockerfile`
+4. **Set environment variables** in Space settings:
+   - `SERPER_API_KEY`: Your Serper API key
+5. **Deploy automatically** - Spaces will build using the Dockerfile
+
+The app will be live at your Space URL: `https://<your-space>.<your-username>.hf.space/`
+
+**API Example for Spaces:**
+```bash
+curl -X POST "https://<your-space>.<your-username>.hf.space/check" \
+  -H "Content-Type: application/json" \
+  -d '{"claim": "The Earth orbits the Sun."}'
+```
+
 ### Manual Deployment
 
 For other platforms, the project includes:
 - `Procfile`: `web: uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 - `runtime.txt`: `python-3.11.9`
+- `Dockerfile`: Docker container configuration for Spaces
 - `requirements.txt`: All dependencies with versions
 
 ### Environment Variables
@@ -208,11 +229,8 @@ Tests cover:
 
 ## Environment Variables
 
-See `.env.example` for all required environment variables.
-
-## Deployment
-
-This application is designed to deploy on Railway. Set the required environment variables in your Railway project settings.
+- `SERPER_API_KEY`: **Required** - Get from [serper.dev](https://serper.dev)
+- `DATABASE_URL`: Optional - SQLite database path (default: `./factcheck.db`)
 
 ## Tech Stack
 
