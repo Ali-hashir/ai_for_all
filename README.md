@@ -1,3 +1,13 @@
+---
+title: AI For All - Fact Checker
+emoji: 🔍
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+license: mit
+---
+
 # AI For All - Fact Checker
 
 A sophisticated fact-checking API built with FastAPI that verifies claims using web search, content analysis, and natural language inference.
