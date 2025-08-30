@@ -36,6 +36,16 @@ async def _fetch(u: str = Query(..., min_length=10, max_length=2000)):
     return {"count": len(paras), "samples": paras[:3]}
 
 
+@app.get("/_select")
+async def _select(claim: str = Query(..., min_length=8, max_length=300)):
+    """Debug select endpoint for testing evidence selection."""
+    from app.logic.selector import select_evidence
+    search = get_search()
+    sources = await search(claim)
+    picked = await select_evidence(claim, sources, per_source=2, max_total=8)
+    return {"n_sources": len(picked), "items": [s.model_dump() for s in picked]}
+
+
 # Root endpoint
 @app.get("/")
 async def root():
