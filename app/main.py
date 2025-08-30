@@ -1,10 +1,12 @@
 """FastAPI main application module."""
 
 import os
-from fastapi import FastAPI, Query
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Query, HTTPException, Request
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.templating import Jinja2Templates
 from app.deps import get_active_search_provider
 from app.search.provider import get_search
+from app.store.db import init_db, load_result
 
 # Create FastAPI app instance
 app = FastAPI(
@@ -12,6 +14,13 @@ app = FastAPI(
     description="A fact-checking API that analyzes claims and returns verdicts with sources",
     version="1.0.0"
 )
+
+# Templates setup
+templates = Jinja2Templates(directory="app/web/templates")
+
+@app.on_event("startup")
+def _startup():
+    init_db()
 
 
 @app.get("/healthz")
@@ -95,6 +104,15 @@ async def _post(claim: str = Query(..., min_length=8, max_length=300)):
     }
 
 
+@app.get("/r/{rid}", response_class=HTMLResponse)
+def read_result(rid: str, request: Request):
+    """View a shared fact-check result."""
+    data = load_result(rid)
+    if not data:
+        raise HTTPException(status_code=404, detail="Result not found")
+    return templates.TemplateResponse("result.html", {"request": request, "r": data})
+
+
 # Root endpoint
 @app.get("/")
 async def root():
@@ -108,6 +126,26 @@ async def root():
             "view_result": "/r/{id}"
         }
     }
+
+
+@app.get("/_save_dummy")
+def _save_dummy():
+    """Debug endpoint to test saving and sharing functionality."""
+    from app.store.db import save_result
+    
+    dummy = {
+      "claim": "The Earth orbits the Sun.",
+      "verdict": "True",
+      "confidence": 0.8,
+      "rationale": "Textbook science and multiple sources support it. [1]",
+      "post": "Verdict: True — Basic astronomy supports the claim. Source: nasa.gov https://www.nasa.gov/",
+      "sources": [
+        {"title":"NASA", "url":"https://www.nasa.gov/", "snippet":"", "evidence":["Earth orbits the Sun."]}
+      ],
+      "id": ""
+    }
+    rid = save_result(dummy)
+    return {"id": rid, "url": f"/r/{rid}"}
 
 
 if __name__ == "__main__":
