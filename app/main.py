@@ -1,9 +1,10 @@
 """FastAPI main application module."""
 
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.responses import JSONResponse
 from app.deps import get_active_search_provider
+from app.search.provider import get_search
 
 # Create FastAPI app instance
 app = FastAPI(
@@ -17,6 +18,14 @@ app = FastAPI(
 async def healthz():
     """Health check endpoint."""
     return {"ok": True, "provider": get_active_search_provider()}
+
+
+@app.get("/_search")
+async def _search(q: str = Query(..., min_length=3, max_length=200)):
+    """Debug search endpoint for testing search functionality."""
+    search = get_search()
+    results = await search(q)
+    return {"count": len(results), "items": [r.model_dump() for r in results]}
 
 
 # Root endpoint
