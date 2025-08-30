@@ -1,12 +1,13 @@
 """FastAPI main application module."""
 
 import os
-from fastapi import FastAPI, Query, HTTPException, Request
+from fastapi import FastAPI, Query, HTTPException, Request, Body, Form
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from app.deps import get_active_search_provider
 from app.search.provider import get_search
 from app.store.db import init_db, load_result
+from app.schemas import CheckRequest
 
 # Create FastAPI app instance
 app = FastAPI(
@@ -113,9 +114,50 @@ def read_result(rid: str, request: Request):
     return templates.TemplateResponse("result.html", {"request": request, "r": data})
 
 
-# Root endpoint
-@app.get("/")
-async def root():
+@app.post("/check")
+async def check(payload: CheckRequest = Body(...)):
+    """Main fact-checking endpoint - processes claims and returns verdicts."""
+    from app.logic.orchestrator import run_pipeline
+    
+    claim = payload.claim.strip()
+    if len(claim) < 8:
+        raise HTTPException(status_code=400, detail="claim too short")
+    try:
+        result = await run_pipeline(claim)
+        return result
+    except Exception as e:
+        # Return structured fallback rather than 500
+        fallback = {
+            "claim": claim,
+            "verdict": "Unverified",
+            "confidence": 0.0,
+            "rationale": f"Pipeline error: {type(e).__name__}. Try again later or rephrase.",
+            "post": "Verdict: Unverified — Unable to verify due to a temporary error.",
+            "sources": [],
+            "id": "",
+        }
+        # do not save failing runs
+        return fallback
+
+
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request):
+    """Home page with fact-checking form."""
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.post("/ui/check", response_class=HTMLResponse)
+async def ui_check(request: Request, claim: str = Form(...)):
+    """UI endpoint for HTMX form submission."""
+    from app.logic.orchestrator import run_pipeline
+    
+    result = await run_pipeline(claim.strip())
+    return templates.TemplateResponse("_result_block.html", {"request": request, "r": result})
+
+
+# Root API info endpoint  
+@app.get("/api")
+async def api_info():
     """Root endpoint with basic info."""
     return {
         "service": "AI For All - Fact Checker",

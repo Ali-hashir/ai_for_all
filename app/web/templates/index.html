@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Automated Fact-Checker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color-scheme: light dark; }
+    body { margin:0; padding:24px; max-width:900px; }
+    .wrap { display:grid; gap:16px; }
+    textarea { width:100%; min-height:110px; padding:12px; border-radius:10px; border:1px solid #d1d5db; }
+    button { padding:10px 14px; border-radius:10px; border:1px solid #d1d5db; cursor:pointer; }
+    .muted { color:#6b7280; font-size:14px; }
+    .card { border:1px solid #e5e7eb; border-radius:12px; padding:16px; }
+  </style>
+</head>
+<body>
+  <h1 class="muted">Automated Fact-Checker & Synthesizer</h1>
+
+  <div class="card">
+    <form class="wrap" hx-post="/ui/check" hx-target="#result" hx-swap="innerHTML">
+      <label for="claim" class="muted">Paste a single claim</label>
+      <textarea id="claim" name="claim" placeholder="e.g., The Earth orbits the Sun"></textarea>
+      <div>
+        <button type="submit">Check claim</button>
+        <span class="muted">You'll get sources, a verdict, and a shareable post.</span>
+      </div>
+    </form>
+  </div>
+
+  <div id="result" class="wrap" style="margin-top:16px;"></div>
+</body>
+</html>
