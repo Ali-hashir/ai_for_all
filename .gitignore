@@ -1,0 +1,7 @@
+.env
+PLAN.md
+
+# add all pycache
+__pycache__/
+
+.vscode/
