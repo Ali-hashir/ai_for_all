@@ -75,6 +75,26 @@ async def _verdict(claim: str = Query(..., min_length=8, max_length=300)):
     }
 
 
+@app.get("/_post")
+async def _post(claim: str = Query(..., min_length=8, max_length=300)):
+    """Debug post endpoint for testing full search → select → verdict → communicator pipeline."""
+    from app.logic.selector import select_evidence
+    from app.nlp.verdict import make_verdict
+    from app.logic.communicator import build_post
+    
+    search = get_search()
+    sources = await search(claim)
+    picked = await select_evidence(claim, sources, per_source=2, max_total=8)
+    label, confidence, rationale, cites = make_verdict(claim, picked)
+    post = build_post(claim, label, rationale, picked, cites)
+    return {
+        "label": label,
+        "confidence": round(confidence, 3),
+        "post_len": len(post),
+        "post": post,
+    }
+
+
 # Root endpoint
 @app.get("/")
 async def root():
