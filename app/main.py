@@ -28,6 +28,14 @@ async def _search(q: str = Query(..., min_length=3, max_length=200)):
     return {"count": len(results), "items": [r.model_dump() for r in results]}
 
 
+@app.get("/_fetch")
+async def _fetch(u: str = Query(..., min_length=10, max_length=2000)):
+    """Debug fetch endpoint for testing URL content extraction."""
+    from app.fetch.fetcher import get_paragraphs_for_url
+    paras = await get_paragraphs_for_url(u)
+    return {"count": len(paras), "samples": paras[:3]}
+
+
 # Root endpoint
 @app.get("/")
 async def root():
