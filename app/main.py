@@ -46,6 +46,16 @@ async def _select(claim: str = Query(..., min_length=8, max_length=300)):
     return {"n_sources": len(picked), "items": [s.model_dump() for s in picked]}
 
 
+@app.get("/_nli")
+def _nli(text: str = Query(..., min_length=5, max_length=800),
+         claim: str = Query(..., min_length=5, max_length=800)):
+    """Debug NLI endpoint for testing natural language inference."""
+    from app.nlp.nli import score_one
+    probs = score_one(text, claim)
+    verdict = max(probs, key=probs.get)
+    return {"probs": probs, "top": verdict}
+
+
 # Root endpoint
 @app.get("/")
 async def root():
